@@ -8,7 +8,7 @@ import (
 
 func main() {
 	// Route the path to a function
-	http.HandleFunc("/", controllers.ProcessRequest)
+	http.HandleFunc("/todo", controllers.ProcessRequest)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

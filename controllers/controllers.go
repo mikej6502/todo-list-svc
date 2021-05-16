@@ -7,7 +7,8 @@ import (
 	"net/http"
 )
 
-// GET all items in the to do list
+var datastore = database.InMemoryDataStore{}
+
 func ProcessRequest(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
@@ -19,17 +20,15 @@ func ProcessRequest(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GET all items in the to do list
 func listItems(w http.ResponseWriter, r *http.Request) {
-	datastore := database.InMemoryDataStore{}
-
 	var json, _ = json.Marshal(datastore.GetItems())
 
 	w.Write(json)
 }
 
+// POST a new item to the to do list
 func addItems(w http.ResponseWriter, r *http.Request) {
-	datastore := database.InMemoryDataStore{}
-
 	decoder := json.NewDecoder(r.Body)
 	var item model.Item
 	err := decoder.Decode(&item)
