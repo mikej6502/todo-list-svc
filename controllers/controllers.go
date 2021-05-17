@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-var inMemoryDataStore = database.InMemoryDataStore{}
+var dataStore = database.InMemoryDataStore{}
 
 func ProcessRequest(w http.ResponseWriter, r *http.Request) {
 
@@ -22,7 +22,7 @@ func ProcessRequest(w http.ResponseWriter, r *http.Request) {
 
 // GET all items in the to do list
 func listItems(w http.ResponseWriter, r *http.Request) {
-	var json, _ = json.Marshal(inMemoryDataStore.GetItems())
+	var json, _ = json.Marshal(dataStore.GetItems())
 
 	w.Write(json)
 }
@@ -36,7 +36,7 @@ func addItems(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	} else {
-		inMemoryDataStore.AddItem(item)
+		dataStore.AddItem(item)
 		w.WriteHeader(http.StatusCreated)
 	}
 }
