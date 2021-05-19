@@ -2,7 +2,7 @@ package database
 
 import "github.com/mikej6502/todo-list-svc/model"
 
-var items []model.Item
+var items = make([]model.Item, 0)
 
 type DataStore interface {
 	GetItems() []model.Item
