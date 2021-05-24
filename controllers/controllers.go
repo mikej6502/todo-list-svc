@@ -11,10 +11,10 @@ import (
 var dataStore = database.InMemoryDataStore{}
 
 func ProcessRequest(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		p := strings.Split(r.URL.Path, "/")[1:]
-		n := len(p)
+	p := strings.Split(r.URL.Path, "/")[1:]
+	n := len(p)
 
+	if r.Method == http.MethodGet {
 		if p[0] == "todo" && p[1] == "" {
 			listItems(w, r)
 		} else if n == 2 && p[0] == "todo" {
@@ -22,6 +22,10 @@ func ProcessRequest(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if r.Method == http.MethodPost {
 		addItem(w, r)
+	} else if r.Method == http.MethodPut {
+		if len(p) == 2 && p[0] == "todo" {
+			updateItem(w, r, p[1])
+		}
 	} else {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	}
@@ -57,10 +61,34 @@ func addItem(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	} else {
-		var json, _ = json.Marshal(dataStore.AddItem(item))
+		var newItem, err = dataStore.AddItem(item)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+
+		json, _ := json.Marshal(newItem)
+
 		w.Header().Add("content-type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-
 		w.Write(json)
+	}
+}
+
+// PUT: Update an existing item in the to do list
+func updateItem(w http.ResponseWriter, r *http.Request, id string) {
+	decoder := json.NewDecoder(r.Body)
+	var item model.Item
+	err := decoder.Decode(&item)
+
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	} else {
+		err := dataStore.UpdateItem(item, id)
+
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
 	}
 }

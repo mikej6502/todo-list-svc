@@ -27,10 +27,33 @@ func (d InMemoryDataStore) GetItems() []model.Item {
 	return items
 }
 
-func (d InMemoryDataStore) AddItem(item model.Item) model.Item {
+func (d InMemoryDataStore) AddItem(item model.Item) (model.Item, error) {
 	item.Id = strconv.FormatInt(nextId, 10)
 	nextId++
 
 	items = append(items, item)
-	return item
+
+	return item, nil
+}
+
+func (d InMemoryDataStore) UpdateItem(item model.Item, id string) error {
+	var updated = false
+
+	for i := range items {
+		var retrievedItem = &items[i]
+		if retrievedItem.Id == id {
+			retrievedItem.Title = item.Title
+			retrievedItem.Description = item.Description
+			retrievedItem.Completed = item.Completed
+
+			updated = true
+			break
+		}
+	}
+
+	if !updated {
+		return errors.New("cannot find item for id: " + id)
+	}
+
+	return nil
 }
