@@ -13,6 +13,10 @@ var nextId int64
 type InMemoryDataStore struct {
 }
 
+func (d InMemoryDataStore) Init() error {
+	return nil
+}
+
 func (d InMemoryDataStore) GetItem(id string) (model.Item, error) {
 	for _, item := range items {
 		if id == item.Id {

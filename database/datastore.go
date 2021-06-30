@@ -3,6 +3,7 @@ package database
 import "github.com/mikej6502/todo-list-svc/model"
 
 type DataStore interface {
+	Init() error
 	GetItem(id string) (model.Item, error)
 	GetItems() []model.Item
 	AddItem(item model.Item) (model.Item, error)
