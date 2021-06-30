@@ -65,21 +65,22 @@ func (d *MongoDBDataStore) GetItem(id string) (model.Item, error) {
 
 func (d *MongoDBDataStore) GetItems() []model.Item {
 	var cur, err = d.collection.Find(d.ctx, bson.M{})
+	var results []model.Item
+
 	if err != nil {
 		log.Println(err)
-	}
-	var results []model.Item
-	for cur.Next(d.ctx) {
-		var elem model.Item
-		err := cur.Decode(&elem)
-		if err != nil {
-			log.Println(err)
+	} else {
+		for cur.Next(d.ctx) {
+			var elem model.Item
+			err := cur.Decode(&elem)
+			if err != nil {
+				log.Println(err)
+			}
+
+			results = append(results, elem)
 		}
-
-		results = append(results, elem)
+		cur.Close(d.ctx)
 	}
-
-	cur.Close(d.ctx)
 
 	return results
 }
@@ -97,16 +98,13 @@ func (d *MongoDBDataStore) AddItem(item model.Item) (model.Item, error) {
 }
 
 func (d *MongoDBDataStore) UpdateItem(item model.Item, id string) error {
-
 	ID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	filter := bson.M{"_id": ID}
-
-	_, err = d.collection.ReplaceOne(d.ctx, filter, item)
+	_, err = d.collection.ReplaceOne(d.ctx, bson.M{"_id": ID}, item)
 	if err != nil {
 		log.Println(err)
 		return err
