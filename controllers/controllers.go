@@ -8,7 +8,12 @@ import (
 	"strings"
 )
 
-var dataStore = database.InMemoryDataStore{}
+var store database.DataStore
+
+func Initialise(dataStore database.DataStore) {
+	store = dataStore
+	store.Init()
+}
 
 func ProcessRequest(w http.ResponseWriter, r *http.Request) {
 	p := strings.Split(r.URL.Path, "/")[1:]
@@ -34,7 +39,7 @@ func ProcessRequest(w http.ResponseWriter, r *http.Request) {
 // GET all items in the to do list
 func getItemById(w http.ResponseWriter, r *http.Request, id string) {
 
-	var item, err = dataStore.GetItem(id)
+	var item, err = store.GetItem(id)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	} else {
@@ -46,9 +51,9 @@ func getItemById(w http.ResponseWriter, r *http.Request, id string) {
 
 // GET single item by id
 func listItems(w http.ResponseWriter, r *http.Request) {
-	var json, _ = json.Marshal(dataStore.GetItems())
+	var json, _ = json.Marshal(store.GetItems())
 
-	w.Header().Add("content-type", "application/json")
+	//w.Header().Add("content-type", "application/json")
 	w.Write(json)
 }
 
@@ -61,7 +66,7 @@ func addItem(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	} else {
-		var newItem, err = dataStore.AddItem(item)
+		var newItem, err = store.AddItem(item)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
@@ -83,7 +88,7 @@ func updateItem(w http.ResponseWriter, r *http.Request, id string) {
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	} else {
-		err := dataStore.UpdateItem(item, id)
+		err := store.UpdateItem(item, id)
 
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
