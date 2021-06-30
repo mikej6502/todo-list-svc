@@ -11,44 +11,42 @@ import (
 	"log"
 )
 
-var client *mongo.Client
-var collection *mongo.Collection
-var ctx = context.TODO()
-
 type MongoDBDataStore struct {
-	Url string
+	Url            string
+	DatabaseName   string
+	CollectionName string
+	client         *mongo.Client
+	collection     *mongo.Collection
+	ctx            context.Context
 }
 
-func (d MongoDBDataStore) Init() error {
+func (d *MongoDBDataStore) Init() error {
+	d.ctx = context.TODO()
+
 	clientOptions := options.Client().ApplyURI(d.Url)
-	client, err := mongo.Connect(ctx, clientOptions)
+	client, err := mongo.Connect(d.ctx, clientOptions)
 	if err != nil {
 		log.Println(err)
 	}
 
-	err = client.Ping(ctx, nil)
+	err = client.Ping(d.ctx, nil)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	collection = client.Database("todo-list-db").Collection("items")
+	d.collection = client.Database(d.DatabaseName).Collection(d.CollectionName)
 	return nil
 }
 
-func (d MongoDBDataStore) GetItem(id string) (model.Item, error) {
+func (d *MongoDBDataStore) GetItem(id string) (model.Item, error) {
 	ID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		log.Println(err)
 		return model.Item{}, err
 	}
 
-	filter := bson.M{"_id": ID}
-
-	findOptions := options.Find()
-	findOptions.SetLimit(1)
-
-	singleResult := collection.FindOne(ctx, filter)
+	singleResult := d.collection.FindOne(d.ctx, bson.M{"_id": ID})
 
 	if singleResult == nil {
 		log.Println("item not found for ID: " + id)
@@ -65,13 +63,13 @@ func (d MongoDBDataStore) GetItem(id string) (model.Item, error) {
 	return elem, nil
 }
 
-func (d MongoDBDataStore) GetItems() []model.Item {
-	var cur, err = collection.Find(ctx, bson.M{})
+func (d *MongoDBDataStore) GetItems() []model.Item {
+	var cur, err = d.collection.Find(d.ctx, bson.M{})
 	if err != nil {
 		log.Println(err)
 	}
 	var results []model.Item
-	for cur.Next(ctx) {
+	for cur.Next(d.ctx) {
 		var elem model.Item
 		err := cur.Decode(&elem)
 		if err != nil {
@@ -81,13 +79,13 @@ func (d MongoDBDataStore) GetItems() []model.Item {
 		results = append(results, elem)
 	}
 
-	cur.Close(ctx)
+	cur.Close(d.ctx)
 
 	return results
 }
 
-func (d MongoDBDataStore) AddItem(item model.Item) (model.Item, error) {
-	insertResult, err := collection.InsertOne(ctx, item)
+func (d *MongoDBDataStore) AddItem(item model.Item) (model.Item, error) {
+	insertResult, err := d.collection.InsertOne(d.ctx, item)
 	if err != nil {
 		log.Println(err)
 		return item, err
@@ -98,7 +96,7 @@ func (d MongoDBDataStore) AddItem(item model.Item) (model.Item, error) {
 	return item, nil
 }
 
-func (d MongoDBDataStore) UpdateItem(item model.Item, id string) error {
+func (d *MongoDBDataStore) UpdateItem(item model.Item, id string) error {
 
 	ID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -108,7 +106,7 @@ func (d MongoDBDataStore) UpdateItem(item model.Item, id string) error {
 
 	filter := bson.M{"_id": ID}
 
-	_, err = collection.ReplaceOne(ctx, filter, item)
+	_, err = d.collection.ReplaceOne(d.ctx, filter, item)
 	if err != nil {
 		log.Println(err)
 		return err

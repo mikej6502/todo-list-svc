@@ -9,8 +9,11 @@ import (
 
 func main() {
 	//var dataStore = database.InMemoryDataStore{}
-	var dataStore = database.MongoDBDataStore{Url: "mongodb://localhost:27017/"}
-	controllers.Initialise(dataStore)
+	var dataStore = database.MongoDBDataStore{Url: "mongodb://localhost:27017/",
+		DatabaseName:   "todo-list-db",
+		CollectionName: "todo-list"}
+
+	controllers.Initialise(&dataStore)
 
 	http.HandleFunc("/todo", controllers.ProcessRequest)
 	http.HandleFunc("/todo/", controllers.ProcessRequest)
