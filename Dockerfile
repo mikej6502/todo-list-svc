@@ -1,5 +1,5 @@
 #Dockerfile to run a Go webservice. Note this does not build it, only runs the binary in a container
-#esnure the binary has been ccross compiled for linux using...
+#ensure the binary has been cross compiled for linux using...
 # env GOOS=linux GOARCH=386 go build -o bin/todo_list_svc main.go
 FROM alpine:3.7
 
